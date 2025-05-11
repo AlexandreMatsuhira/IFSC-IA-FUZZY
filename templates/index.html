@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Semáforos com Lógica Fuzzy</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Sistema de Controle de Semáforos com Lógica Fuzzy</h1>
+        <div class="avenue">
+            <div class="start">Início da Avenida</div>
+            {% for i in range(4) %}
+            <div class="segment">
+                <div class="sensor-data" id="segment-{{i+1}}">
+                    <h3>Segmento {{i+1}}</h3>
+                    <p>Densidade: <span class="density">0</span>%</p>
+                    <p>Velocidade Média: <span class="avg-speed">0</span> km/h</p>
+                    <p>Tempo de Espera: <span class="wait-time">0</span> s</p>
+                    <p>Incidentes: <span class="incidents">0</span></p>
+                </div>
+                <div class="traffic-light" id="light-{{i+1}}">
+                    <div class="light red"></div>
+                    <div class="light yellow"></div>
+                    <div class="light green"></div>
+                    <p>Tempo Verde: <span class="green-time">30</span>s</p>
+                    <p>Tempo Vermelho: <span class="red-time">45</span>s</p>
+                </div>
+            </div>
+            {% endfor %}
+            <div class="end">Fim da Avenida (2000m)</div>
+        </div>
+        <div class="controls">
+            <button id="update-btn">Atualizar Dados</button>
+            <button id="auto-update">Atualização Automática</button>
+            <div class="chart-container">
+                <canvas id="trafficChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <script>
+        let autoUpdateInterval;
+        const chartColors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'];
+        let trafficChart;
+        
+        // Inicializa o gráfico
+        function initChart() {
+            const ctx = document.getElementById('trafficChart').getContext('2d');
+            trafficChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Segmento 1', 'Segmento 2', 'Segmento 3', 'Segmento 4'],
+                    datasets: [
+                        {
+                            label: 'Densidade (%)',
+                            data: [0, 0, 0, 0],
+                            backgroundColor: chartColors[0]
+                        },
+                        {
+                            label: 'Tempo Verde (s)',
+                            data: [0, 0, 0, 0],
+                            backgroundColor: chartColors[1]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Atualiza os dados na página
+        function updateData(data) {
+            // Atualiza dados dos segmentos
+            data.segments.forEach(segment => {
+                const segmentEl = document.getElementById(`segment-${segment.id}`);
+                segmentEl.querySelector('.density').textContent = segment.density;
+                segmentEl.querySelector('.avg-speed').textContent = segment.avg_speed;
+                segmentEl.querySelector('.wait-time').textContent = segment.wait_time;
+                segmentEl.querySelector('.incidents').textContent = segment.incidents;
+            });
+            
+            // Atualiza dados dos semáforos
+            data.traffic_lights.forEach(light => {
+                const lightEl = document.getElementById(`light-${light.id}`);
+                lightEl.querySelector('.green-time').textContent = light.green_time;
+                lightEl.querySelector('.red-time').textContent = light.red_time;
+                
+                // Animação do semáforo
+                animateTrafficLight(lightEl, light.green_time, light.red_time);
+            });
+            
+            // Atualiza o gráfico
+            updateChart(data);
+        }
+        
+        // Animação do semáforo
+        function animateTrafficLight(lightEl, greenTime, redTime) {
+            const cycleTime = greenTime + redTime;
+            const now = Date.now() % (cycleTime * 1000) / 1000;
+            
+            // Reseta todas as luzes
+            lightEl.querySelector('.red').classList.remove('active');
+            lightEl.querySelector('.yellow').classList.remove('active');
+            lightEl.querySelector('.green').classList.remove('active');
+            
+            if (now < greenTime) {
+                // Sinal verde
+                lightEl.querySelector('.green').classList.add('active');
+            } else if (now < greenTime + 3) {
+                // Sinal amarelo (3 segundos)
+                lightEl.querySelector('.yellow').classList.add('active');
+            } else {
+                // Sinal vermelho
+                lightEl.querySelector('.red').classList.add('active');
+            }
+        }
+        
+        // Atualiza o gráfico
+        function updateChart(data) {
+            trafficChart.data.datasets[0].data = data.segments.map(s => s.density);
+            trafficChart.data.datasets[1].data = data.traffic_lights.map(l => l.green_time);
+            trafficChart.update();
+        }
+        
+        // Busca dados do servidor
+        function fetchData() {
+            fetch('/get_traffic_data')
+                .then(response => response.json())
+                .then(data => {
+                    updateData(data);
+                })
+                .catch(error => console.error('Erro ao buscar dados:', error));
+        }
+        
+        // Configura os botões
+        document.getElementById('update-btn').addEventListener('click', fetchData);
+        document.getElementById('auto-update').addEventListener('click', function() {
+            if (autoUpdateInterval) {
+                clearInterval(autoUpdateInterval);
+                autoUpdateInterval = null;
+                this.textContent = 'Atualização Automática';
+            } else {
+                fetchData();  // Busca imediatamente
+                autoUpdateInterval = setInterval(fetchData, 5000);  // Atualiza a cada 5 segundos
+                this.textContent = 'Parar Atualização';
+            }
+        });
+        
+        // Inicializa a página
+        document.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            fetchData();
+        });
+    </script>
+</body>
+</html>
