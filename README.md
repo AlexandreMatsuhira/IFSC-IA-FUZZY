@@ -1,5 +1,5 @@
 # Sistema de Controle de Semáforos Inteligente com Lógica Fuzzy
-
+**Instituição: IFSC LAGES**
 **Trabalho da disciplina de Inteligência Artificial**  
 **Professor: Wilson Castello**  
 
