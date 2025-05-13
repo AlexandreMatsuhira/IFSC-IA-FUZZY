@@ -112,7 +112,6 @@
         
         <div class="controls">
             <button id="update-btn">Atualizar Dados</button>
-            <button id="auto-update">Atualização Automática</button>
         </div>
         
         <div class="chart-container">
@@ -228,17 +227,7 @@
         
         // Configura os botões
         document.getElementById('update-btn').addEventListener('click', fetchData);
-        document.getElementById('auto-update').addEventListener('click', function() {
-            if (autoUpdateInterval) {
-                clearInterval(autoUpdateInterval);
-                autoUpdateInterval = null;
-                this.textContent = 'Atualização Automática';
-            } else {
-                fetchData();  // Busca imediatamente
-                autoUpdateInterval = setInterval(fetchData, 5000);  // Atualiza a cada 5 segundos
-                this.textContent = 'Parar Atualização';
-            }
-        });
+
         
         // Inicializa a página
         document.addEventListener('DOMContentLoaded', () => {
