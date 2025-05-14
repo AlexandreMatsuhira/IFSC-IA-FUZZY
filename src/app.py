@@ -23,7 +23,6 @@ def get_traffic_data():
             'wait_time': random.randint(0, 300),
             'incidents': random.randint(0, 5)
         })
-    print(segments)
     
     # Processa os dados com lógica fuzzy
     traffic_lights = fuzzy_controller.calculate_light_times(segments)
@@ -36,7 +35,6 @@ def get_traffic_data():
 @app.route('/update_lights', methods=['POST'])
 def update_lights():
     data = request.json
-    print(request)
     segments = data['segments']
     
     # Processa os dados com lógica fuzzy

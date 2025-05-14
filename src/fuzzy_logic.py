@@ -30,7 +30,7 @@ class FuzzyTrafficController:
         self.density['high'] = fuzz.smf(self.density.universe, 55, 80) 
         
         # Velocidade média (0-80 km/h)
-        self.avg_speed['low'] = fuzz.zmf(self.avg_speed.universe, 20, 40)
+        self.avg_speed['low'] = fuzz.zmf(self.avg_speed.universe, 10, 40)
         self.avg_speed['medium'] = fuzz.gaussmf(self.avg_speed.universe, 50, 10)
         self.avg_speed['high'] = fuzz.smf(self.avg_speed.universe, 40, 60)
         
@@ -94,6 +94,7 @@ class FuzzyTrafficController:
                 ~self.density['high'] & ~self.wait_time['high'], 
                 self.green_time['medium']
             )
+            
         ]
     
     def calculate_light_times(self, segments):
